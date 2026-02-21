@@ -42,6 +42,7 @@ function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   document.getElementById('quiz-footer').classList.remove('show');
+  document.getElementById('training-footer').classList.remove('show');
   window.scrollTo(0, 0);
 
   if (name === 'grade') {
@@ -192,33 +193,28 @@ if ('serviceWorker' in navigator) {
 }
 
 // ============================================================
-// COLOR TRAINING
+// COLOR TRAINING (Endless Mode)
 // ============================================================
-const TRAINING_COUNT = 10; // 1セットの出題数
-let trainingQuestions = [];
 let trainingIdx = 0;
 let trainingScore = 0;
 let trainingAnswered = false;
+let currentTrainingQ = null;
 
 function startTraining() {
-  trainingQuestions = generateTrainingQuestions(TRAINING_COUNT);
   trainingIdx = 0;
   trainingScore = 0;
   showScreen('training');
+  generateNextTrainingQ();
   renderTraining();
 }
 
-function generateTrainingQuestions(count) {
-  const pool = shuffle([...pccsTrainingData]);
-  const selected = pool.slice(0, count);
-
-  return selected.map(correctColor => {
-    // 不正解の選択肢を生成（同トーン別色相、同色相別トーン、完全ランダムを混ぜる）
-    const distractors = generateDistractors(correctColor, pool);
-    const choices = shuffle([correctColor, ...distractors]);
-    const answerIdx = choices.indexOf(correctColor);
-    return { color: correctColor, choices, answer: answerIdx };
-  });
+function generateNextTrainingQ() {
+  const pool = pccsTrainingData;
+  const correctColor = pool[Math.floor(Math.random() * pool.length)];
+  const distractors = generateDistractors(correctColor, pool);
+  const choices = shuffle([correctColor, ...distractors]);
+  const answerIdx = choices.indexOf(correctColor);
+  currentTrainingQ = { color: correctColor, choices, answer: answerIdx };
 }
 
 function generateDistractors(correct, pool) {
@@ -253,11 +249,11 @@ function formatDescription(color) {
 
 function renderTraining() {
   trainingAnswered = false;
-  const q = trainingQuestions[trainingIdx];
-  const total = trainingQuestions.length;
+  const q = currentTrainingQ;
 
-  document.getElementById('training-progress-fill').style.width = ((trainingIdx + 1) / total * 100) + '%';
-  document.getElementById('training-counter').textContent = 'Q' + (trainingIdx + 1) + ' / ' + total;
+  // Endless: no progress bar, show running count
+  document.getElementById('training-progress-fill').style.width = '100%';
+  document.getElementById('training-counter').textContent = 'Q' + (trainingIdx + 1) + '　正解 ' + trainingScore + '/' + trainingIdx;
 
   // Color swatch
   const swatch = document.getElementById('training-swatch');
@@ -291,11 +287,15 @@ function renderTraining() {
 function selectTraining(idx) {
   if (trainingAnswered) return;
   trainingAnswered = true;
-  const q = trainingQuestions[trainingIdx];
+  const q = currentTrainingQ;
+  trainingIdx++;
   if (idx === q.answer) trainingScore++;
 
   // Record stats
   recordAttempt(q.color, idx === q.answer);
+
+  // Update running score
+  document.getElementById('training-counter').textContent = 'Q' + trainingIdx + '　正解 ' + trainingScore + '/' + trainingIdx;
 
   // Show hint
   document.getElementById('training-hint').classList.add('show');
@@ -325,23 +325,26 @@ function selectTraining(idx) {
   document.getElementById('training-explanation').innerHTML = expHtml;
 
   // Next button
-  const isLast = trainingIdx === trainingQuestions.length - 1;
-  document.getElementById('training-next-btn').innerHTML = (isLast ? '結果を見る' : '次の問題') + ' ' + SVG_ARROW;
+  document.getElementById('training-next-btn').innerHTML = '次の問題 ' + SVG_ARROW;
   document.getElementById('training-footer').classList.add('show');
 }
 
 function nextTraining() {
-  if (trainingIdx >= trainingQuestions.length - 1) {
-    showTrainingResult();
-    return;
-  }
-  trainingIdx++;
+  generateNextTrainingQ();
   renderTraining();
 }
 
+function stopTraining() {
+  if (trainingIdx === 0) {
+    showScreen('home');
+    return;
+  }
+  showTrainingResult();
+}
+
 function showTrainingResult() {
-  const total = trainingQuestions.length;
-  const pct = Math.round((trainingScore / total) * 100);
+  const total = trainingIdx;
+  const pct = total > 0 ? Math.round((trainingScore / total) * 100) : 0;
   let title, sub;
   if (pct >= 90)      { title = "素晴らしい色感覚！🎨"; sub = "色の見分けがしっかりできています"; }
   else if (pct >= 70) { title = "なかなかの目利き！👁️"; sub = "よく見極められています"; }
