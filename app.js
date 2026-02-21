@@ -43,6 +43,7 @@ function showScreen(name) {
   document.getElementById('screen-' + name).classList.add('active');
   document.getElementById('quiz-footer').classList.remove('show');
   document.getElementById('training-footer').classList.remove('show');
+  document.getElementById('kanyo-footer').classList.remove('show');
   window.scrollTo(0, 0);
 
   if (name === 'grade') {
@@ -359,53 +360,210 @@ function showTrainingResult() {
 }
 
 // ============================================================
-// STATISTICS (localStorage)
+// KANYOUSHOKU TRAINING (Endless Mode)
 // ============================================================
-const STATS_KEY = 'colorTrainingStats';
+let kanyoIdx = 0;
+let kanyoScore = 0;
+let kanyoAnswered = false;
+let currentKanyoQ = null;
 
-function loadStats() {
+function startKanyo() {
+  kanyoIdx = 0;
+  kanyoScore = 0;
+  showScreen('kanyo');
+  generateNextKanyoQ();
+  renderKanyo();
+}
+
+function generateNextKanyoQ() {
+  const pool = kanyoushokuData;
+  const correct = pool[Math.floor(Math.random() * pool.length)];
+
+  // Generate distractors: prefer same category for difficulty
+  const candidates = pool.filter(c => c !== correct);
+  const sameCategory = shuffle(candidates.filter(c => c.category === correct.category));
+  const diffCategory = shuffle(candidates.filter(c => c.category !== correct.category));
+
+  const distractors = [];
+  // Fill with same-category first (up to 2), then different
+  while (distractors.length < 3 && sameCategory.length > 0) {
+    distractors.push(sameCategory.shift());
+  }
+  while (distractors.length < 3 && diffCategory.length > 0) {
+    distractors.push(diffCategory.shift());
+  }
+
+  const choices = shuffle([correct, ...distractors.slice(0, 3)]);
+  const answerIdx = choices.indexOf(correct);
+  currentKanyoQ = { color: correct, choices, answer: answerIdx };
+}
+
+function renderKanyo() {
+  kanyoAnswered = false;
+  const q = currentKanyoQ;
+
+  document.getElementById('kanyo-progress-fill').style.width = '100%';
+  document.getElementById('kanyo-counter').textContent = 'Q' + (kanyoIdx + 1) + '　正解 ' + kanyoScore + '/' + kanyoIdx;
+
+  const swatch = document.getElementById('kanyo-swatch');
+  swatch.style.background = q.color.hex;
+  swatch.className = 'training-swatch' + (isLightColor(q.color.hex) ? ' light-swatch' : '');
+
+  const hint = document.getElementById('kanyo-hint');
+  hint.textContent = q.color.category;
+  hint.classList.remove('show');
+
+  const labels = ['A', 'B', 'C', 'D'];
+  let html = '';
+  q.choices.forEach((c, i) => {
+    html += '<button class="training-choice-btn" onclick="selectKanyo(' + i + ')" id="kc-' + i + '">';
+    html += '<span class="choice-label" id="kl-' + i + '">' + labels[i] + '</span>';
+    html += '<span class="choice-detail">';
+    html += '<span class="choice-code">' + c.name + '</span>';
+    html += '<span class="choice-sub">' + c.reading + '</span>';
+    html += '</span>';
+    html += '</button>';
+  });
+  document.getElementById('kanyo-choices').innerHTML = html;
+  document.getElementById('kanyo-explanation').innerHTML = '';
+  document.getElementById('kanyo-footer').classList.remove('show');
+
+  window.scrollTo(0, 0);
+}
+
+function selectKanyo(idx) {
+  if (kanyoAnswered) return;
+  kanyoAnswered = true;
+  const q = currentKanyoQ;
+  kanyoIdx++;
+  if (idx === q.answer) kanyoScore++;
+
+  recordKanyoAttempt(q.color, idx === q.answer);
+
+  document.getElementById('kanyo-counter').textContent = 'Q' + kanyoIdx + '　正解 ' + kanyoScore + '/' + kanyoIdx;
+  document.getElementById('kanyo-hint').classList.add('show');
+
+  for (let i = 0; i < q.choices.length; i++) {
+    const btn = document.getElementById('kc-' + i);
+    const lbl = document.getElementById('kl-' + i);
+    btn.classList.add('disabled');
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      lbl.innerHTML = SVG_CHECK;
+    } else if (i === idx) {
+      btn.classList.add('wrong');
+      lbl.innerHTML = SVG_X;
+    }
+  }
+
+  const correct = q.color;
+  const expHtml = '<div class="explanation">' +
+    '<div class="explanation-title">💡 正解</div>' +
+    '<p><strong>' + correct.name + '</strong>（' + correct.reading + '）<br>' +
+    '分類：' + correct.category + '</p>' +
+    '</div>';
+  document.getElementById('kanyo-explanation').innerHTML = expHtml;
+
+  document.getElementById('kanyo-next-btn').innerHTML = '次の問題 ' + SVG_ARROW;
+  document.getElementById('kanyo-footer').classList.add('show');
+}
+
+function nextKanyo() {
+  generateNextKanyoQ();
+  renderKanyo();
+}
+
+function stopKanyo() {
+  if (kanyoIdx === 0) { showScreen('home'); return; }
+  showKanyoResult();
+}
+
+function showKanyoResult() {
+  const total = kanyoIdx;
+  const pct = total > 0 ? Math.round((kanyoScore / total) * 100) : 0;
+  let title, sub;
+  if (pct >= 90)      { title = "素晴らしい色彩知識！🎨"; sub = "慣用色名をよく覚えています"; }
+  else if (pct >= 70) { title = "よくできました！👏"; sub = "かなり覚えてきています"; }
+  else if (pct >= 50) { title = "あと少し！💪"; sub = "色見本を見ながら復習しましょう"; }
+  else                { title = "練習あるのみ！📖"; sub = "カラーリストで色名を確認しましょう"; }
+
+  document.getElementById('kanyo-result-pct').textContent = pct + '%';
+  document.getElementById('kanyo-result-total').textContent = kanyoScore + ' / ' + total + '問正解';
+  document.getElementById('kanyo-result-message').textContent = title;
+  document.getElementById('kanyo-result-sub').textContent = '慣用色名トレーニング ─ ' + sub;
+  showScreen('kanyoResult');
+}
+
+// ============================================================
+// STATISTICS (localStorage) - Tabbed
+// ============================================================
+const STATS_KEY_PCCS = 'colorTrainingStats';
+const STATS_KEY_KANYO = 'kanyoTrainingStats';
+let currentStatsTab = 'pccs';
+
+function loadStats(key) {
   try {
-    const raw = localStorage.getItem(STATS_KEY);
+    const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : { attempts: [] };
   } catch(e) {
     return { attempts: [] };
   }
 }
 
-function saveStats(stats) {
-  try {
-    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
-  } catch(e) {}
+function saveStats(key, stats) {
+  try { localStorage.setItem(key, JSON.stringify(stats)); } catch(e) {}
 }
 
 function recordAttempt(color, isCorrect) {
-  const stats = loadStats();
-  stats.attempts.push({
-    tone: color.tone,
-    hue: color.hue,
-    correct: isCorrect,
-    date: new Date().toISOString()
-  });
-  saveStats(stats);
+  const stats = loadStats(STATS_KEY_PCCS);
+  stats.attempts.push({ tone: color.tone, hue: color.hue, correct: isCorrect, date: new Date().toISOString() });
+  saveStats(STATS_KEY_PCCS, stats);
 }
 
-function clearStats() {
-  if (confirm('学習履歴をすべて削除しますか？')) {
-    localStorage.removeItem(STATS_KEY);
+function recordKanyoAttempt(color, isCorrect) {
+  const stats = loadStats(STATS_KEY_KANYO);
+  stats.attempts.push({ name: color.name, category: color.category, correct: isCorrect, date: new Date().toISOString() });
+  saveStats(STATS_KEY_KANYO, stats);
+}
+
+function clearCurrentStats() {
+  const label = currentStatsTab === 'pccs' ? '色感覚' : '慣用色名';
+  if (confirm(label + 'の学習履歴をすべて削除しますか？')) {
+    const key = currentStatsTab === 'pccs' ? STATS_KEY_PCCS : STATS_KEY_KANYO;
+    localStorage.removeItem(key);
     renderStats();
   }
 }
 
-function showStats() {
+function showStats(tab) {
+  currentStatsTab = tab || 'pccs';
   showScreen('stats');
+  updateStatsTabUI();
   renderStats();
 }
 
-function renderStats() {
-  const stats = loadStats();
-  const attempts = stats.attempts;
+function switchStatsTab(tab) {
+  currentStatsTab = tab;
+  updateStatsTabUI();
+  renderStats();
+}
 
-  // Total summary
+function updateStatsTabUI() {
+  document.getElementById('stats-tab-pccs').classList.toggle('active', currentStatsTab === 'pccs');
+  document.getElementById('stats-tab-kanyo').classList.toggle('active', currentStatsTab === 'kanyo');
+}
+
+function renderStats() {
+  if (currentStatsTab === 'pccs') {
+    renderPccsStats();
+  } else {
+    renderKanyoStats();
+  }
+}
+
+function renderPccsStats() {
+  const stats = loadStats(STATS_KEY_PCCS);
+  const attempts = stats.attempts;
   const total = attempts.length;
   const correct = attempts.filter(a => a.correct).length;
   const wrong = total - correct;
@@ -420,71 +578,27 @@ function renderStats() {
     return;
   }
 
-  // Aggregate by tone
   const toneOrder = ['v','b','s','dp','lt','sf','d','dk','p','ltg','g','dkg'];
   const byTone = {};
   toneOrder.forEach(t => byTone[t] = { total: 0, wrong: 0 });
-  attempts.forEach(a => {
-    if (byTone[a.tone]) {
-      byTone[a.tone].total++;
-      if (!a.correct) byTone[a.tone].wrong++;
-    }
-  });
+  attempts.forEach(a => { if (byTone[a.tone]) { byTone[a.tone].total++; if (!a.correct) byTone[a.tone].wrong++; } });
 
-  // Aggregate by hue
   const byHue = {};
   for (let h = 1; h <= 24; h++) byHue[h] = { total: 0, wrong: 0 };
-  attempts.forEach(a => {
-    if (byHue[a.hue]) {
-      byHue[a.hue].total++;
-      if (!a.correct) byHue[a.hue].wrong++;
-    }
-  });
+  attempts.forEach(a => { if (byHue[a.hue]) { byHue[a.hue].total++; if (!a.correct) byHue[a.hue].wrong++; } });
 
-  // Hue names
   const hueNameMap = {};
   pccsTrainingData.forEach(c => { hueNameMap[c.hue] = c.hueName; });
 
-  // Build HTML
   let html = '';
 
-  // ── Tone section ──
   html += '<h3 class="stats-section-title">トーン別の苦手度</h3>';
-  html += '<div class="stats-bar-list">';
-  const toneItems = toneOrder
-    .filter(t => byTone[t].total > 0)
-    .map(t => ({ key: t, label: t + '（' + toneNames[t] + '）', ...byTone[t] }))
-    .sort((a, b) => (b.wrong / b.total) - (a.wrong / a.total));
+  html += renderBarList(toneOrder.filter(t => byTone[t].total > 0).map(t => ({ label: t + '（' + toneNames[t] + '）', ...byTone[t] })));
 
-  toneItems.forEach(item => {
-    const wrongRate = Math.round(item.wrong / item.total * 100);
-    const barClass = wrongRate >= 50 ? 'bar-danger' : wrongRate >= 25 ? 'bar-warn' : 'bar-ok';
-    html += '<div class="stats-bar-item">';
-    html += '<div class="stats-bar-label"><span class="stats-bar-name">' + item.label + '</span><span class="stats-bar-nums">' + item.wrong + '/' + item.total + '問ミス</span></div>';
-    html += '<div class="stats-bar-track"><div class="stats-bar-fill ' + barClass + '" style="width:' + wrongRate + '%"></div></div>';
-    html += '</div>';
-  });
-  html += '</div>';
-
-  // ── Hue section ──
   html += '<h3 class="stats-section-title" style="margin-top:28px">色相別の苦手度</h3>';
-  html += '<div class="stats-bar-list">';
-  const hueItems = Object.keys(byHue)
-    .filter(h => byHue[h].total > 0)
-    .map(h => ({ key: h, label: h + '：' + (hueNameMap[h] || ''), ...byHue[h] }))
-    .sort((a, b) => (b.wrong / b.total) - (a.wrong / a.total));
+  html += renderBarList(Object.keys(byHue).filter(h => byHue[h].total > 0).map(h => ({ label: h + '：' + (hueNameMap[h] || ''), ...byHue[h] })));
 
-  hueItems.forEach(item => {
-    const wrongRate = Math.round(item.wrong / item.total * 100);
-    const barClass = wrongRate >= 50 ? 'bar-danger' : wrongRate >= 25 ? 'bar-warn' : 'bar-ok';
-    html += '<div class="stats-bar-item">';
-    html += '<div class="stats-bar-label"><span class="stats-bar-name">' + item.label + '</span><span class="stats-bar-nums">' + item.wrong + '/' + item.total + '問ミス</span></div>';
-    html += '<div class="stats-bar-track"><div class="stats-bar-fill ' + barClass + '" style="width:' + wrongRate + '%"></div></div>';
-    html += '</div>';
-  });
-  html += '</div>';
-
-  // ── Worst combos ──
+  // Worst combos
   const byCombo = {};
   attempts.forEach(a => {
     const key = a.tone + a.hue;
@@ -493,10 +607,8 @@ function renderStats() {
     if (!a.correct) byCombo[key].wrong++;
   });
 
-  const worstCombos = Object.values(byCombo)
-    .filter(c => c.wrong > 0)
-    .sort((a, b) => b.wrong - a.wrong || (b.wrong/b.total) - (a.wrong/a.total))
-    .slice(0, 8);
+  const worstCombos = Object.values(byCombo).filter(c => c.wrong > 0)
+    .sort((a, b) => b.wrong - a.wrong || (b.wrong/b.total) - (a.wrong/a.total)).slice(0, 8);
 
   if (worstCombos.length > 0) {
     html += '<h3 class="stats-section-title" style="margin-top:28px">特に苦手な色（トーン×色相）</h3>';
@@ -515,4 +627,77 @@ function renderStats() {
   }
 
   document.getElementById('stats-detail').innerHTML = html;
+}
+
+function renderKanyoStats() {
+  const stats = loadStats(STATS_KEY_KANYO);
+  const attempts = stats.attempts;
+  const total = attempts.length;
+  const correct = attempts.filter(a => a.correct).length;
+  const wrong = total - correct;
+
+  document.getElementById('stats-total').textContent = total;
+  document.getElementById('stats-correct').textContent = correct;
+  document.getElementById('stats-wrong').textContent = wrong;
+  document.getElementById('stats-rate').textContent = total > 0 ? Math.round(correct / total * 100) + '%' : '—';
+
+  if (total === 0) {
+    document.getElementById('stats-detail').innerHTML = '<p class="stats-empty">まだ学習履歴がありません。<br>慣用色名トレーニングを始めましょう！</p>';
+    return;
+  }
+
+  // By category
+  const catOrder = ['赤系','橙系','黄系','緑系','青系','紫系','茶系','無彩色系'];
+  const byCat = {};
+  catOrder.forEach(c => byCat[c] = { total: 0, wrong: 0 });
+  attempts.forEach(a => { if (byCat[a.category]) { byCat[a.category].total++; if (!a.correct) byCat[a.category].wrong++; } });
+
+  let html = '';
+  html += '<h3 class="stats-section-title">系統別の苦手度</h3>';
+  html += renderBarList(catOrder.filter(c => byCat[c].total > 0).map(c => ({ label: c, ...byCat[c] })));
+
+  // Worst individual colors
+  const byName = {};
+  attempts.forEach(a => {
+    if (!byName[a.name]) byName[a.name] = { name: a.name, category: a.category, total: 0, wrong: 0 };
+    byName[a.name].total++;
+    if (!a.correct) byName[a.name].wrong++;
+  });
+
+  const worstColors = Object.values(byName).filter(c => c.wrong > 0)
+    .sort((a, b) => b.wrong - a.wrong || (b.wrong/b.total) - (a.wrong/a.total)).slice(0, 10);
+
+  if (worstColors.length > 0) {
+    html += '<h3 class="stats-section-title" style="margin-top:28px">特に苦手な色名</h3>';
+    html += '<div class="stats-combo-list">';
+    worstColors.forEach(c => {
+      const color = kanyoushokuData.find(d => d.name === c.name);
+      const hexColor = color ? color.hex : '#888';
+      html += '<div class="stats-combo-item">';
+      html += '<span class="stats-combo-chip" style="background:' + hexColor + ';' + (isLightColor(hexColor) ? 'box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1)' : '') + '"></span>';
+      html += '<span class="stats-combo-code">' + c.name + '</span>';
+      html += '<span class="stats-combo-name">' + c.category + '</span>';
+      html += '<span class="stats-combo-count">' + c.wrong + '回ミス</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('stats-detail').innerHTML = html;
+}
+
+// Shared bar list renderer
+function renderBarList(items) {
+  const sorted = items.sort((a, b) => (b.wrong / b.total) - (a.wrong / a.total));
+  let html = '<div class="stats-bar-list">';
+  sorted.forEach(item => {
+    const wrongRate = Math.round(item.wrong / item.total * 100);
+    const barClass = wrongRate >= 50 ? 'bar-danger' : wrongRate >= 25 ? 'bar-warn' : 'bar-ok';
+    html += '<div class="stats-bar-item">';
+    html += '<div class="stats-bar-label"><span class="stats-bar-name">' + item.label + '</span><span class="stats-bar-nums">' + item.wrong + '/' + item.total + '問ミス</span></div>';
+    html += '<div class="stats-bar-track"><div class="stats-bar-fill ' + barClass + '" style="width:' + wrongRate + '%"></div></div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
 }
