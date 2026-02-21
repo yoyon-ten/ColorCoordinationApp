@@ -1,7 +1,10 @@
-const CACHE_NAME = 'color-quiz-v1';
+const CACHE_NAME = 'color-quiz-v2';
 const ASSETS = [
   './',
   './index.html',
+  './style.css',
+  './data.js',
+  './app.js',
   './manifest.json',
   'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Outfit:wght@400;500;600;700&display=swap'
 ];
