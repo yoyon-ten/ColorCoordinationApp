@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="色彩検定" />
+  <meta name="theme-color" content="#F7F5F2" />
+  <title>色彩検定トレーナー</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #F7F5F2;
+      --card: #FFFFFF;
+      --text: #2D2A26;
+      --text-sub: #78756F;
+      --accent: #E8583D;
+      --accent-light: #FFF0ED;
+      --correct: #16A34A;
+      --correct-light: #DCFCE7;
+      --wrong: #DC2626;
+      --wrong-light: #FEE2E2;
+      --border: #E8E5E0;
+      --shadow: 0 2px 12px rgba(0,0,0,0.06);
+      --radius: 14px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+
+    .app {
+      max-width: 375px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .header {
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-back {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text);
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .header-back:active { transform: scale(0.92); }
+
+    .header-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    /* Home */
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeUp 0.3s ease; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .home { padding: 20px; }
+
+    .home-hero {
+      text-align: center;
+      padding: 40px 20px 36px;
+    }
+
+    .home-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #E8583D, #F59E0B, #10B981, #3B82F6, #8B5CF6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 24px rgba(232, 88, 61, 0.25);
+    }
+
+    .home-logo span {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .home-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .home-desc {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    .section-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      margin-bottom: 10px;
+    }
+
+    .menu-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      transition: all 0.15s;
+    }
+    .menu-card:active { transform: scale(0.97); }
+
+    .menu-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .menu-icon.quiz { background: var(--accent-light); color: var(--accent); }
+    .menu-icon.palette { background: #EDE9FE; color: #7C3AED; }
+
+    .menu-text h3 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .menu-text p { font-size: 12px; color: var(--text-sub); }
+    .menu-arrow { margin-left: auto; color: var(--text-sub); opacity: 0.4; }
+
+    /* Grade */
+    .grade-select { padding: 20px; }
+
+    .grade-btn {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      width: 100%;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .grade-btn:active { transform: scale(0.97); }
+    .grade-btn .count { font-size: 13px; font-weight: 400; color: var(--text-sub); }
+
+    /* Quiz */
+    .quiz-area { padding: 0 20px 100px; }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .quiz-counter {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+    }
+
+    .quiz-category {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-light);
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .quiz-question {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .choice-btn {
+      width: 100%;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.15s;
+      text-align: left;
+    }
+    .choice-btn:active:not(.disabled) { transform: scale(0.98); }
+
+    .choice-label {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      flex-shrink: 0;
+      color: var(--text-sub);
+    }
+
+    .choice-btn.correct { border-color: var(--correct); background: var(--correct-light); }
+    .choice-btn.correct .choice-label { background: var(--correct); color: white; }
+
+    .choice-btn.wrong { border-color: var(--wrong); background: var(--wrong-light); }
+    .choice-btn.wrong .choice-label { background: var(--wrong); color: white; }
+
+    .choice-btn.disabled { pointer-events: none; }
+    .choice-btn.disabled:not(.correct):not(.wrong) { opacity: 0.45; }
+
+    .explanation {
+      background: #FEFCE8;
+      border: 1px solid #FDE68A;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-top: 16px;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .explanation-title { font-size: 12px; font-weight: 700; color: #B45309; margin-bottom: 6px; }
+    .explanation p { font-size: 13px; line-height: 1.65; color: #78350F; }
+
+    .quiz-footer {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 375px;
+      padding: 16px 20px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+      background: linear-gradient(transparent, var(--bg) 20%);
+      display: none;
+    }
+    .quiz-footer.show { display: block; }
+
+    .next-btn {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+      box-shadow: 0 4px 16px rgba(232, 88, 61, 0.3);
+    }
+    .next-btn:active { transform: scale(0.97); }
+
+    /* Result */
+    .result { padding: 40px 20px; text-align: center; }
+
+    .result-circle {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 4px solid var(--accent);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 8px 32px rgba(232, 88, 61, 0.15);
+    }
+
+    .result-score {
+      font-family: 'Outfit', sans-serif;
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .result-total { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
+    .result-message { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .result-sub { font-size: 13px; color: var(--text-sub); margin-bottom: 32px; }
+
+    .result-actions { display: flex; gap: 10px; }
+
+    .result-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .result-btn:active { transform: scale(0.97); }
+    .result-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+
+    /* Color List */
+    .color-list { padding: 0 20px 40px; }
+
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+
+    .tab {
+      flex: 1;
+      padding: 8px 6px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-sub);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .tab.active { background: var(--accent); color: white; font-weight: 600; }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .color-card {
+      background: var(--card);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .color-swatch { height: 72px; position: relative; }
+    .color-swatch.light-color { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
+
+    .color-hex {
+      position: absolute;
+      bottom: 6px;
+      right: 8px;
+      font-family: 'Outfit', monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.35);
+      color: white;
+    }
+
+    .color-info { padding: 10px 12px; }
+    .color-name { font-size: 14px; font-weight: 700; margin-bottom: 1px; }
+    .color-name-en { font-family: 'Outfit', sans-serif; font-size: 11px; color: var(--text-sub); }
+    .color-desc { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- ===== HOME ===== -->
+    <div id="screen-home" class="screen active">
+      <div class="home">
+        <div class="home-hero">
+          <div class="home-logo"><span>色</span></div>
+          <h1 class="home-title">色彩検定トレーナー</h1>
+          <p class="home-desc">3級・2級対応の問題演習と色見本</p>
+        </div>
+        <p class="section-label">Study</p>
+        <div class="menu-card" onclick="showScreen('grade')">
+          <div class="menu-icon quiz">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="menu-text"><h3>問題演習</h3><p>4択クイズで知識を確認</p></div>
+          <div class="menu-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </div>
+        <div class="menu-card" onclick="showScreen('colorList')">
+          <div class="menu-icon palette">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+          </div>
+          <div class="menu-text"><h3>色見本・カラーリスト</h3><p>基本色名・PCCS・慣用色名</p></div>
+          <div class="menu-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== GRADE SELECT ===== -->
+    <div id="screen-grade" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="showScreen('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <div class="header-title">問題演習</div>
+      </div>
+      <div class="grade-select">
+        <p class="section-label" style="margin-bottom:16px">Select Grade</p>
+        <button class="grade-btn" onclick="startQuiz('3級')"><span>3級</span><span class="count" id="count-3"></span></button>
+        <button class="grade-btn" onclick="startQuiz('2級')"><span>2級</span><span class="count" id="count-2"></span></button>
+      </div>
+    </div>
+
+    <!-- ===== QUIZ ===== -->
+    <div id="screen-quiz" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="showScreen('grade')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <div class="header-title" id="quiz-header-title"></div>
+      </div>
+      <div class="quiz-area">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="quiz-counter" id="quiz-counter"></div>
+        <div class="quiz-category" id="quiz-category"></div>
+        <h2 class="quiz-question" id="quiz-question"></h2>
+        <div id="choices-container"></div>
+        <div id="explanation-container"></div>
+      </div>
+      <div class="quiz-footer" id="quiz-footer">
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">
+          次の問題 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== RESULT ===== -->
+    <div id="screen-result" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="showScreen('grade')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <div class="header-title" id="result-header-title"></div>
+      </div>
+      <div class="result">
+        <div class="result-circle">
+          <div class="result-score" id="result-pct"></div>
+          <div class="result-total" id="result-total"></div>
+        </div>
+        <h2 class="result-message" id="result-message"></h2>
+        <p class="result-sub" id="result-sub"></p>
+        <div class="result-actions">
+          <button class="result-btn" onclick="showScreen('home')">ホーム</button>
+          <button class="result-btn primary" onclick="startQuiz(currentGrade)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            もう一度
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== COLOR LIST ===== -->
+    <div id="screen-colorList" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="showScreen('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <div class="header-title">色見本・カラーリスト</div>
+      </div>
+      <div class="color-list">
+        <div class="tab-bar" id="tab-bar"></div>
+        <div class="color-grid" id="color-grid"></div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const quizData = {
+  "3級": [
+    { id:1, category:"色の三属性", question:"色の三属性に含まれないものはどれか？", choices:["色相","明度","彩度","濃度"], answer:3, explanation:"色の三属性は「色相（Hue）」「明度（Value/Lightness）」「彩度（Chroma/Saturation）」の3つです。「濃度」は色の三属性には含まれません。" },
+    { id:2, category:"色の三属性", question:"明度が最も高い色はどれか？", choices:["白","黄","赤","青"], answer:0, explanation:"明度とは色の明るさの度合いです。無彩色では白が最も明度が高く、黒が最も明度が低くなります。" },
+    { id:3, category:"色の三属性", question:"純色とは何か？", choices:["白が混ざった色","黒が混ざった色","各色相で最も彩度が高い色","明度が最も高い色"], answer:2, explanation:"純色とは、各色相において最も彩度が高い色（最も鮮やかな色）のことです。" },
+    { id:4, category:"PCCS", question:"PCCSのトーン分類で「vivid（ビビッド）」はどのような印象の色か？", choices:["くすんだ","鮮やかな","暗い","淡い"], answer:1, explanation:"vividトーンは最も彩度が高く、鮮やかで力強い印象を与えるトーンです。" },
+    { id:5, category:"PCCS", question:"PCCSの色相環は何色相で構成されているか？", choices:["12色相","20色相","24色相","36色相"], answer:2, explanation:"PCCS（日本色研配色体系）の色相環は24色相で構成されています。" },
+    { id:6, category:"色彩心理", question:"暖色に分類される色はどれか？", choices:["青","緑","赤","紫"], answer:2, explanation:"暖色は赤・橙・黄など暖かさを感じさせる色です。青は寒色、緑と紫は中性色に分類されます。" },
+    { id:7, category:"色彩心理", question:"膨張色とは一般にどのような色か？", choices:["明度が高い色","明度が低い色","彩度が低い色","寒色系の色"], answer:0, explanation:"膨張色は明度が高い色（明るい色）で、実際より大きく見える効果があります。逆に明度が低い色は収縮色です。" },
+    { id:8, category:"光と色", question:"光の三原色の組み合わせとして正しいものはどれか？", choices:["赤・青・黄","赤・緑・青","赤・緑・黄","黄・緑・青"], answer:1, explanation:"光の三原色はR（赤）・G（緑）・B（青）です。色料の三原色（C・M・Y）と混同しないよう注意しましょう。" },
+    { id:9, category:"光と色", question:"光の三原色をすべて等量で混ぜると何色になるか？", choices:["黒","白","灰色","黄"], answer:1, explanation:"光の三原色（加法混色）をすべて等量で混ぜると白になります。色料の三原色（減法混色）の場合は理論上黒になります。" },
+    { id:10, category:"配色", question:"補色とはどのような関係の色か？", choices:["隣り合う色相の色","色相環で正反対に位置する色","同じ色相で明度が異なる色","同じトーンの色"], answer:1, explanation:"補色とは色相環上で正反対（180度の位置）にある色同士の関係です。並べると互いを引き立て合う効果があります。" },
+    { id:11, category:"配色", question:"ドミナントカラー配色の説明として正しいものはどれか？", choices:["同じトーンでまとめた配色","同じ色相でまとめた配色","補色を使った配色","無彩色だけの配色"], answer:1, explanation:"ドミナントカラー配色は、同一または類似の色相でまとめることで統一感を出す配色技法です。ドミナントトーンは同じトーンでまとめる配色です。" },
+    { id:12, category:"色彩心理", question:"色の誘目性が最も高いのはどれか？", choices:["赤","青","緑","紫"], answer:0, explanation:"誘目性（注意を引く力）は一般に暖色系で高く、特に赤が最も誘目性が高い色とされています。" }
+  ],
+  "2級": [
+    { id:1, category:"マンセル表色系", question:"マンセル表色系の色相は何色相に分けられるか？", choices:["10色相","20色相","40色相","100色相"], answer:3, explanation:"マンセル表色系では、5つの基本色相（R, Y, G, B, P）と5つの中間色相を、さらに各10段階に分け、合計100色相で表します。" },
+    { id:2, category:"マンセル表色系", question:"マンセル表色系で「5R 4/14」の「4」は何を表すか？", choices:["色相","明度","彩度","トーン"], answer:1, explanation:"マンセルの表記法は「色相 明度/彩度」の順です。5R 4/14 は色相5R、明度4、彩度14を意味します。" },
+    { id:3, category:"マンセル表色系", question:"マンセル表色系で明度の範囲はどれか？", choices:["0〜10","0〜100","1〜9","1〜14"], answer:0, explanation:"マンセルの明度（バリュー）は理想的な黒を0、理想的な白を10とした11段階で表されます。" },
+    { id:4, category:"色彩調和", question:"ジャッドの色彩調和論で挙げられている原理でないものはどれか？", choices:["秩序の原理","なじみの原理","対比の原理","類似の原理"], answer:3, explanation:"ジャッドの色彩調和の4つの原理は「秩序」「なじみ」「類似性（共通性）」「明瞭性（対比）」です。「類似の原理」という名称の原理はありません。" },
+    { id:5, category:"光と色", question:"分光反射率曲線が平坦な物体はどのように見えるか？", choices:["赤く見える","無彩色に見える","青く見える","透明に見える"], answer:1, explanation:"分光反射率曲線がすべての波長域で均一（平坦）な場合、特定の色味を持たず無彩色（白・灰・黒）に見えます。" },
+    { id:6, category:"光と色", question:"メタメリズム（条件等色）とは何か？", choices:["同じ光源下で常に同じ色に見えること","異なる光源下で同じ色に見えたり異なる色に見えたりすること","分光分布が同じ色のこと","補色の組み合わせのこと"], answer:1, explanation:"メタメリズムとは、分光分布が異なる2色がある光源下では同じ色に見えるが、別の光源下では異なる色に見える現象です。" },
+    { id:7, category:"色の見え", question:"色の面積効果の説明として正しいものはどれか？", choices:["面積が大きいほど暗く見える","面積が大きいほど明るく鮮やかに見える","面積は色の見えに影響しない","面積が小さいほど鮮やかに見える"], answer:1, explanation:"色の面積効果とは、同じ色でも面積が大きくなると明度・彩度ともに高く（明るく鮮やかに）感じられる現象です。" },
+    { id:8, category:"色の見え", question:"ハレーションとは何か？", choices:["明度差が大きい配色でちらつく現象","彩度の高い色同士が境界でちらつく現象","補色同士で色が暗く見える現象","遠くの色がかすんで見える現象"], answer:1, explanation:"ハレーションは、高彩度の色同士（特に補色）を隣接させた際に、境界部分がちらついて見づらくなる現象です。" },
+    { id:9, category:"配色技法", question:"セパレーションの効果として正しいものはどれか？", choices:["色を大きく見せる","配色にまとまりや区切りを与える","色を鮮やかにする","色を暗くする"], answer:1, explanation:"セパレーションとは、色と色の間に無彩色や低彩度の色を挟むことで、配色を見やすく整理する技法です。" },
+    { id:10, category:"配色技法", question:"トーンオントーン配色の特徴はどれか？", choices:["同じトーンで異なる色相を組み合わせる","同じ色相でトーンに差をつける","反対色相を組み合わせる","無彩色のみで構成する"], answer:1, explanation:"トーンオントーン配色は、同一色相（または類似色相）内でトーン（明度・彩度）に変化をつけた配色です。" },
+    { id:11, category:"ファッション", question:"ナチュラル配色とは何か？", choices:["自然界に見られる色の明暗関係に従った配色","緑色だけを使った配色","無彩色のみの配色","ビビッドトーンの配色"], answer:0, explanation:"ナチュラル配色は、自然界の色の見え方（黄は明るく、青は暗い等）に沿った配色で、違和感のない自然な印象を与えます。" },
+    { id:12, category:"インテリア", question:"インテリアにおけるアクセントカラーの面積比として適切なのはどれか？", choices:["約70%","約25%","約5%","約50%"], answer:2, explanation:"インテリアの配色比率は一般に、ベースカラー約70%、アソートカラー約25%、アクセントカラー約5%とされています。" }
+  ]
+};
+
+const colorListData = {
+  "基本色名": [
+    { name:"赤", nameEn:"Red", hex:"#DC143C" },
+    { name:"橙", nameEn:"Orange", hex:"#F28C28" },
+    { name:"黄", nameEn:"Yellow", hex:"#F5D623" },
+    { name:"黄緑", nameEn:"Yellow Green", hex:"#9ACD32" },
+    { name:"緑", nameEn:"Green", hex:"#2E8B57" },
+    { name:"青緑", nameEn:"Blue Green", hex:"#00897B" },
+    { name:"青", nameEn:"Blue", hex:"#2563EB" },
+    { name:"青紫", nameEn:"Blue Purple", hex:"#5B21B6" },
+    { name:"紫", nameEn:"Purple", hex:"#7C3AED" },
+    { name:"赤紫", nameEn:"Red Purple", hex:"#C026D3" },
+    { name:"白", nameEn:"White", hex:"#FFFFFF" },
+    { name:"灰", nameEn:"Gray", hex:"#9CA3AF" },
+    { name:"黒", nameEn:"Black", hex:"#1F2937" }
+  ],
+  "PCCSトーン": [
+    { name:"v (ビビッド)", nameEn:"Vivid", hex:"#E8383D", desc:"鮮やかな" },
+    { name:"b (ブライト)", nameEn:"Bright", hex:"#F09199", desc:"明るい" },
+    { name:"s (ストロング)", nameEn:"Strong", hex:"#D03C3C", desc:"強い" },
+    { name:"dp (ディープ)", nameEn:"Deep", hex:"#96282F", desc:"深い" },
+    { name:"lt (ライト)", nameEn:"Light", hex:"#F5B3B8", desc:"浅い" },
+    { name:"sf (ソフト)", nameEn:"Soft", hex:"#C98A8E", desc:"柔らかい" },
+    { name:"d (ダル)", nameEn:"Dull", hex:"#A06064", desc:"鈍い" },
+    { name:"dk (ダーク)", nameEn:"Dark", hex:"#6E2B30", desc:"暗い" },
+    { name:"p (ペール)", nameEn:"Pale", hex:"#F8D1D4", desc:"ごく薄い" },
+    { name:"ltg (ライトグレイッシュ)", nameEn:"Light Grayish", hex:"#C4A0A3", desc:"明るい灰みの" },
+    { name:"g (グレイッシュ)", nameEn:"Grayish", hex:"#8E6064", desc:"灰みの" },
+    { name:"dkg (ダークグレイッシュ)", nameEn:"Dark Grayish", hex:"#53363A", desc:"暗い灰みの" }
+  ],
+  "慣用色名": [
+    { name:"朱色", nameEn:"Vermilion", hex:"#E34234" },
+    { name:"珊瑚色", nameEn:"Coral", hex:"#F88379" },
+    { name:"山吹色", nameEn:"Bright Yellow", hex:"#F8B400" },
+    { name:"萌黄", nameEn:"Fresh Green", hex:"#AACF53" },
+    { name:"若草色", nameEn:"Young Grass", hex:"#B9D08B" },
+    { name:"翡翠色", nameEn:"Jade", hex:"#38B48B" },
+    { name:"浅葱色", nameEn:"Light Blue", hex:"#00A3AF" },
+    { name:"群青色", nameEn:"Ultramarine", hex:"#4753A2" },
+    { name:"藤色", nameEn:"Wisteria", hex:"#BAA8D3" },
+    { name:"牡丹色", nameEn:"Peony", hex:"#E44D93" },
+    { name:"鳶色", nameEn:"Reddish Brown", hex:"#8B4C39" },
+    { name:"利休鼠", nameEn:"Grayish Olive", hex:"#7E8E77" }
+  ]
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentGrade = "";
+let questions = [];
+let currentIdx = 0;
+let score = 0;
+let answered = false;
+let selectedIdx = null;
+
+// ============================================================
+// SCREEN NAVIGATION
+// ============================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.getElementById('quiz-footer').classList.remove('show');
+  window.scrollTo(0, 0);
+
+  if (name === 'grade') {
+    document.getElementById('count-3').textContent = quizData["3級"].length + "問";
+    document.getElementById('count-2').textContent = quizData["2級"].length + "問";
+  }
+  if (name === 'colorList') {
+    initColorList();
+  }
+}
+
+// ============================================================
+// QUIZ
+// ============================================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz(grade) {
+  currentGrade = grade;
+  questions = shuffle(quizData[grade]);
+  currentIdx = 0;
+  score = 0;
+  document.getElementById('quiz-header-title').textContent = grade + ' 問題演習';
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  selectedIdx = null;
+  const q = questions[currentIdx];
+  const total = questions.length;
+
+  document.getElementById('progress-fill').style.width = ((currentIdx + 1) / total * 100) + '%';
+  document.getElementById('quiz-counter').textContent = 'Q' + (currentIdx + 1) + ' / ' + total;
+  document.getElementById('quiz-category').textContent = q.category;
+  document.getElementById('quiz-question').textContent = q.question;
+  document.getElementById('explanation-container').innerHTML = '';
+  document.getElementById('quiz-footer').classList.remove('show');
+
+  const labels = ['A', 'B', 'C', 'D'];
+  let html = '';
+  q.choices.forEach((c, i) => {
+    html += '<button class="choice-btn" onclick="selectChoice(' + i + ')" id="choice-' + i + '">';
+    html += '<span class="choice-label" id="label-' + i + '">' + labels[i] + '</span>';
+    html += '<span>' + c + '</span>';
+    html += '</button>';
+  });
+  document.getElementById('choices-container').innerHTML = html;
+  window.scrollTo(0, 0);
+}
+
+function selectChoice(idx) {
+  if (answered) return;
+  answered = true;
+  selectedIdx = idx;
+  const q = questions[currentIdx];
+  const isCorrect = idx === q.answer;
+  if (isCorrect) score++;
+
+  // Style all buttons
+  const labels = ['A', 'B', 'C', 'D'];
+  const checkSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const xSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+  for (let i = 0; i < q.choices.length; i++) {
+    const btn = document.getElementById('choice-' + i);
+    const lbl = document.getElementById('label-' + i);
+    btn.classList.add('disabled');
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      lbl.innerHTML = checkSvg;
+    } else if (i === idx) {
+      btn.classList.add('wrong');
+      lbl.innerHTML = xSvg;
+    }
+  }
+
+  // Show explanation
+  document.getElementById('explanation-container').innerHTML =
+    '<div class="explanation"><div class="explanation-title">💡 解説</div><p>' + q.explanation + '</p></div>';
+
+  // Show next button
+  const footer = document.getElementById('quiz-footer');
+  const isLast = currentIdx === questions.length - 1;
+  document.getElementById('next-btn').innerHTML = (isLast ? '結果を見る' : '次の問題') +
+    ' <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+  footer.classList.add('show');
+}
+
+function nextQuestion() {
+  if (currentIdx >= questions.length - 1) {
+    showResult();
+    return;
+  }
+  currentIdx++;
+  renderQuestion();
+}
+
+function showResult() {
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+  let title, sub;
+  if (pct >= 90) { title = "素晴らしい！🎉"; sub = "合格圏内です！この調子で頑張りましょう"; }
+  else if (pct >= 70) { title = "よくできました！👏"; sub = "もう少しで合格ラインです"; }
+  else if (pct >= 50) { title = "あと少し！💪"; sub = "苦手分野を復習しましょう"; }
+  else { title = "頑張りましょう！📖"; sub = "テキストを見直して再チャレンジ"; }
+
+  document.getElementById('result-header-title').textContent = currentGrade + ' 結果';
+  document.getElementById('result-pct').textContent = pct + '%';
+  document.getElementById('result-total').textContent = score + ' / ' + total + '問正解';
+  document.getElementById('result-message').textContent = title;
+  document.getElementById('result-sub').textContent = currentGrade + ' ─ ' + sub;
+  showScreen('result');
+}
+
+// ============================================================
+// COLOR LIST
+// ============================================================
+let currentTab = "基本色名";
+
+function initColorList() {
+  const tabs = Object.keys(colorListData);
+  currentTab = tabs[0];
+  let html = '';
+  tabs.forEach(t => {
+    html += '<button class="tab' + (t === currentTab ? ' active' : '') + '" onclick="switchTab(\'' + t + '\')">' + t + '</button>';
+  });
+  document.getElementById('tab-bar').innerHTML = html;
+  renderColors();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderColors();
+}
+
+function isLightColor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 200;
+}
+
+function renderColors() {
+  const colors = colorListData[currentTab];
+  let html = '';
+  colors.forEach(c => {
+    html += '<div class="color-card">';
+    html += '<div class="color-swatch' + (isLightColor(c.hex) ? ' light-color' : '') + '" style="background:' + c.hex + '">';
+    html += '<span class="color-hex">' + c.hex + '</span>';
+    html += '</div>';
+    html += '<div class="color-info">';
+    html += '<div class="color-name">' + c.name + '</div>';
+    html += '<div class="color-name-en">' + c.nameEn + '</div>';
+    if (c.desc) html += '<div class="color-desc">' + c.desc + '</div>';
+    html += '</div></div>';
+  });
+  document.getElementById('color-grid').innerHTML = html;
+}
+
+// ============================================================
+// SERVICE WORKER REGISTRATION (for PWA)
+// ============================================================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
