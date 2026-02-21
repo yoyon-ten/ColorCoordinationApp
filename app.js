@@ -496,7 +496,12 @@ function showKanyoResult() {
 // ============================================================
 const STATS_KEY_PCCS = 'colorTrainingStats';
 const STATS_KEY_KANYO = 'kanyoTrainingStats';
+const MAX_STATS_ATTEMPTS = 1000;
 let currentStatsTab = 'pccs';
+const statsSaveWarning = {
+  [STATS_KEY_PCCS]: false,
+  [STATS_KEY_KANYO]: false
+};
 
 function loadStats(key) {
   try {
@@ -508,19 +513,40 @@ function loadStats(key) {
 }
 
 function saveStats(key, stats) {
-  try { localStorage.setItem(key, JSON.stringify(stats)); } catch(e) {}
+  try {
+    localStorage.setItem(key, JSON.stringify(stats));
+    statsSaveWarning[key] = false;
+    return true;
+  } catch (e) {
+    statsSaveWarning[key] = true;
+    console.warn('学習履歴の保存に失敗しました。保存容量の上限に達した可能性があります。', { key, error: e });
+    return false;
+  }
 }
 
 function recordAttempt(color, isCorrect) {
   const stats = loadStats(STATS_KEY_PCCS);
   stats.attempts.push({ tone: color.tone, hue: color.hue, correct: isCorrect, date: new Date().toISOString() });
+  if (stats.attempts.length > MAX_STATS_ATTEMPTS) {
+    stats.attempts = stats.attempts.slice(-MAX_STATS_ATTEMPTS);
+  }
   saveStats(STATS_KEY_PCCS, stats);
 }
 
 function recordKanyoAttempt(color, isCorrect) {
   const stats = loadStats(STATS_KEY_KANYO);
   stats.attempts.push({ name: color.name, category: color.category, correct: isCorrect, date: new Date().toISOString() });
+  if (stats.attempts.length > MAX_STATS_ATTEMPTS) {
+    stats.attempts = stats.attempts.slice(-MAX_STATS_ATTEMPTS);
+  }
   saveStats(STATS_KEY_KANYO, stats);
+}
+
+function updateStatsStorageNotice() {
+  const key = currentStatsTab === 'pccs' ? STATS_KEY_PCCS : STATS_KEY_KANYO;
+  const notice = document.getElementById('stats-storage-notice');
+  if (!notice) return;
+  notice.classList.toggle('show', !!statsSaveWarning[key]);
 }
 
 function clearCurrentStats() {
@@ -551,6 +577,7 @@ function updateStatsTabUI() {
 }
 
 function renderStats() {
+  updateStatsStorageNotice();
   if (currentStatsTab === 'pccs') {
     renderPccsStats();
   } else {

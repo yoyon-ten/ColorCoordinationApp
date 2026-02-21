@@ -602,6 +602,20 @@ body {
   color: var(--text-sub);
 }
 
+.stats-storage-notice {
+  display: none;
+  margin: -14px 0 20px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #F59E0B;
+  background: #FFFBEB;
+  color: #92400E;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.stats-storage-notice.show { display: block; }
+
 .stats-section-title {
   font-size: 14px;
   font-weight: 700;
