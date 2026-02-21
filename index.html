@@ -38,6 +38,15 @@
           <div class="menu-text"><h3>色見本・カラーリスト</h3><p>基本色名・PCCS・慣用色名</p></div>
           <div class="menu-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         </div>
+
+        <p class="section-label" style="margin-top:20px">Training</p>
+        <div class="menu-card" onclick="startTraining()">
+          <div class="menu-icon training">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <div class="menu-text"><h3>色感覚トレーニング</h3><p>色を見てトーン記号×色相番号を当てる</p></div>
+          <div class="menu-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </div>
       </div>
     </div>
 
@@ -105,6 +114,50 @@
       <div class="color-list">
         <div class="tab-bar" id="tab-bar"></div>
         <div class="color-grid" id="color-grid"></div>
+      </div>
+    </div>
+
+    <!-- ===== COLOR TRAINING ===== -->
+    <div id="screen-training" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="showScreen('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <div class="header-title">色感覚トレーニング</div>
+      </div>
+      <div class="training-area">
+        <div class="training-progress-bar"><div class="training-progress-fill" id="training-progress-fill"></div></div>
+        <div class="training-counter" id="training-counter"></div>
+        <div class="training-swatch" id="training-swatch">
+          <span class="training-hint" id="training-hint"></span>
+        </div>
+        <p class="training-prompt">この色のトーン記号と色相番号は？</p>
+        <div id="training-choices"></div>
+        <div id="training-explanation"></div>
+      </div>
+      <div class="quiz-footer" id="training-footer">
+        <button class="next-btn" id="training-next-btn" onclick="nextTraining()">次の問題</button>
+      </div>
+    </div>
+
+    <!-- ===== TRAINING RESULT ===== -->
+    <div id="screen-trainingResult" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="showScreen('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <div class="header-title">トレーニング結果</div>
+      </div>
+      <div class="result">
+        <div class="result-circle">
+          <div class="result-score" id="training-result-pct"></div>
+          <div class="result-total" id="training-result-total"></div>
+        </div>
+        <h2 class="result-message" id="training-result-message"></h2>
+        <p class="result-sub" id="training-result-sub"></p>
+        <div class="result-actions">
+          <button class="result-btn" onclick="showScreen('home')">ホーム</button>
+          <button class="result-btn primary" onclick="startTraining()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            もう一度
+          </button>
+        </div>
       </div>
     </div>
 

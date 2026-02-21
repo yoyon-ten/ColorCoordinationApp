@@ -1,4 +1,4 @@
-const CACHE_NAME = 'color-quiz-v2';
+const CACHE_NAME = 'color-quiz-v3';
 const ASSETS = [
   './',
   './index.html',

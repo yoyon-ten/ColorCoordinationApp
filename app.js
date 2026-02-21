@@ -190,3 +190,165 @@ function renderColors() {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+// ============================================================
+// COLOR TRAINING
+// ============================================================
+const TRAINING_COUNT = 10; // 1セットの出題数
+let trainingQuestions = [];
+let trainingIdx = 0;
+let trainingScore = 0;
+let trainingAnswered = false;
+
+function startTraining() {
+  trainingQuestions = generateTrainingQuestions(TRAINING_COUNT);
+  trainingIdx = 0;
+  trainingScore = 0;
+  showScreen('training');
+  renderTraining();
+}
+
+function generateTrainingQuestions(count) {
+  const pool = shuffle([...pccsTrainingData]);
+  const selected = pool.slice(0, count);
+
+  return selected.map(correctColor => {
+    // 不正解の選択肢を生成（同トーン別色相、同色相別トーン、完全ランダムを混ぜる）
+    const distractors = generateDistractors(correctColor, pool);
+    const choices = shuffle([correctColor, ...distractors]);
+    const answerIdx = choices.indexOf(correctColor);
+    return { color: correctColor, choices, answer: answerIdx };
+  });
+}
+
+function generateDistractors(correct, pool) {
+  const candidates = pool.filter(c => c !== correct);
+  const result = [];
+
+  // 同トーン・別色相の色を1つ
+  const sameTone = shuffle(candidates.filter(c => c.tone === correct.tone && c.hue !== correct.hue));
+  if (sameTone.length > 0) result.push(sameTone[0]);
+
+  // 同色相・別トーンの色を1つ
+  const sameHue = shuffle(candidates.filter(c => c.hue === correct.hue && c.tone !== correct.tone));
+  if (sameHue.length > 0 && result.length < 3) result.push(sameHue[0]);
+
+  // 残りをランダムで埋める（既出を除く）
+  const used = new Set([correct, ...result]);
+  const others = shuffle(candidates.filter(c => !used.has(c)));
+  while (result.length < 3 && others.length > 0) {
+    result.push(others.shift());
+  }
+
+  return result.slice(0, 3);
+}
+
+function formatCode(color) {
+  return color.tone + color.hue;
+}
+
+function formatDescription(color) {
+  return toneNames[color.tone] + '・' + color.hueName;
+}
+
+function renderTraining() {
+  trainingAnswered = false;
+  const q = trainingQuestions[trainingIdx];
+  const total = trainingQuestions.length;
+
+  document.getElementById('training-progress-fill').style.width = ((trainingIdx + 1) / total * 100) + '%';
+  document.getElementById('training-counter').textContent = 'Q' + (trainingIdx + 1) + ' / ' + total;
+
+  // Color swatch
+  const swatch = document.getElementById('training-swatch');
+  swatch.style.background = q.color.hex;
+  swatch.className = 'training-swatch' + (isLightColor(q.color.hex) ? ' light-swatch' : '');
+
+  // Hide hint initially
+  const hint = document.getElementById('training-hint');
+  hint.textContent = q.color.hueName;
+  hint.classList.remove('show');
+
+  // Choices
+  const labels = ['A', 'B', 'C', 'D'];
+  let html = '';
+  q.choices.forEach((c, i) => {
+    html += '<button class="training-choice-btn" onclick="selectTraining(' + i + ')" id="tc-' + i + '">';
+    html += '<span class="choice-label" id="tl-' + i + '">' + labels[i] + '</span>';
+    html += '<span class="choice-detail">';
+    html += '<span class="choice-code">' + formatCode(c) + '</span>';
+    html += '<span class="choice-sub">' + formatDescription(c) + '</span>';
+    html += '</span>';
+    html += '<span class="choice-chip" style="background:' + c.hex + ';' + (isLightColor(c.hex) ? 'border-color:rgba(0,0,0,0.15)' : '') + '"></span>';
+    html += '</button>';
+  });
+  document.getElementById('training-choices').innerHTML = html;
+  document.getElementById('training-explanation').innerHTML = '';
+  document.getElementById('training-footer').classList.remove('show');
+
+  window.scrollTo(0, 0);
+}
+
+function selectTraining(idx) {
+  if (trainingAnswered) return;
+  trainingAnswered = true;
+  const q = trainingQuestions[trainingIdx];
+  if (idx === q.answer) trainingScore++;
+
+  // Show hint
+  document.getElementById('training-hint').classList.add('show');
+
+  // Style buttons
+  for (let i = 0; i < q.choices.length; i++) {
+    const btn = document.getElementById('tc-' + i);
+    const lbl = document.getElementById('tl-' + i);
+    btn.classList.add('disabled');
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      lbl.innerHTML = SVG_CHECK;
+    } else if (i === idx) {
+      btn.classList.add('wrong');
+      lbl.innerHTML = SVG_X;
+    }
+  }
+
+  // Explanation
+  const correct = q.color;
+  const expHtml = '<div class="explanation">' +
+    '<div class="explanation-title">💡 正解</div>' +
+    '<p><strong>' + formatCode(correct) + '</strong>（' + toneNames[correct.tone] + '・' + correct.hueName + '）<br>' +
+    'トーン：' + correct.tone + '（' + toneNames[correct.tone] + '）<br>' +
+    '色相番号：' + correct.hue + '（' + correct.hueName + '）</p>' +
+    '</div>';
+  document.getElementById('training-explanation').innerHTML = expHtml;
+
+  // Next button
+  const isLast = trainingIdx === trainingQuestions.length - 1;
+  document.getElementById('training-next-btn').innerHTML = (isLast ? '結果を見る' : '次の問題') + ' ' + SVG_ARROW;
+  document.getElementById('training-footer').classList.add('show');
+}
+
+function nextTraining() {
+  if (trainingIdx >= trainingQuestions.length - 1) {
+    showTrainingResult();
+    return;
+  }
+  trainingIdx++;
+  renderTraining();
+}
+
+function showTrainingResult() {
+  const total = trainingQuestions.length;
+  const pct = Math.round((trainingScore / total) * 100);
+  let title, sub;
+  if (pct >= 90)      { title = "素晴らしい色感覚！🎨"; sub = "色の見分けがしっかりできています"; }
+  else if (pct >= 70) { title = "なかなかの目利き！👁️"; sub = "よく見極められています"; }
+  else if (pct >= 50) { title = "あと少し！💪"; sub = "トーンと色相の組み合わせを復習しましょう"; }
+  else                { title = "練習あるのみ！📖"; sub = "色見本を見ながら感覚を鍛えましょう"; }
+
+  document.getElementById('training-result-pct').textContent = pct + '%';
+  document.getElementById('training-result-total').textContent = trainingScore + ' / ' + total + '問正解';
+  document.getElementById('training-result-message').textContent = title;
+  document.getElementById('training-result-sub').textContent = '色感覚トレーニング ─ ' + sub;
+  showScreen('trainingResult');
+}

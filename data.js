@@ -98,3 +98,163 @@ const colorListData = {
     { name:"利休鼠", nameEn:"Grayish Olive", hex:"#7E8E77" },
   ],
 };
+
+// ============================================================
+// 色感覚トレーニングデータ（PCCS トーン×色相番号）
+// ============================================================
+// 各色は { tone: "トーン記号", hue: 色相番号(1-24), hex: "#色コード", hueName: "色相名" }
+// トーン記号: v, b, s, dp, lt, sf, d, dk, p, ltg, g, dkg
+// 色相番号: 1-24（PCCSの24色相環に対応）
+//
+// 色を追加・修正する場合はこの配列を編集してください。
+// hexの値はPCCSの近似値です。公式カラーチップと若干異なる場合があります。
+
+const pccsTrainingData = [
+  // ── vivid（v）──
+  { tone:"v", hue:1,  hex:"#D83473", hueName:"紫みの赤" },
+  { tone:"v", hue:2,  hex:"#E8383D", hueName:"赤" },
+  { tone:"v", hue:3,  hex:"#E95A2E", hueName:"黄みの赤" },
+  { tone:"v", hue:4,  hex:"#ED6D1E", hueName:"赤みの橙" },
+  { tone:"v", hue:5,  hex:"#F09B18", hueName:"橙" },
+  { tone:"v", hue:6,  hex:"#F5C31C", hueName:"黄みの橙" },
+  { tone:"v", hue:7,  hex:"#F0D816", hueName:"赤みの黄" },
+  { tone:"v", hue:8,  hex:"#E5E017", hueName:"黄" },
+  { tone:"v", hue:9,  hex:"#C3D825", hueName:"緑みの黄" },
+  { tone:"v", hue:10, hex:"#88C43F", hueName:"黄緑" },
+  { tone:"v", hue:11, hex:"#47B352", hueName:"黄みの緑" },
+  { tone:"v", hue:12, hex:"#00A45E", hueName:"緑" },
+  { tone:"v", hue:13, hex:"#009B74", hueName:"青みの緑" },
+  { tone:"v", hue:14, hex:"#00937E", hueName:"青緑" },
+  { tone:"v", hue:15, hex:"#008E94", hueName:"青緑(緑みの青)" },
+  { tone:"v", hue:16, hex:"#0082AE", hueName:"緑みの青" },
+  { tone:"v", hue:17, hex:"#0070B8", hueName:"青" },
+  { tone:"v", hue:18, hex:"#0060B0", hueName:"青" },
+  { tone:"v", hue:19, hex:"#284D9E", hueName:"紫みの青" },
+  { tone:"v", hue:20, hex:"#5A3B99", hueName:"青紫" },
+  { tone:"v", hue:21, hex:"#7D3A90", hueName:"青みの紫" },
+  { tone:"v", hue:22, hex:"#9B2D8B", hueName:"紫" },
+  { tone:"v", hue:23, hex:"#C22878", hueName:"赤みの紫" },
+  { tone:"v", hue:24, hex:"#D42E6B", hueName:"赤紫" },
+
+  // ── bright（b）──
+  { tone:"b", hue:2,  hex:"#F09199", hueName:"赤" },
+  { tone:"b", hue:4,  hex:"#F2A67E", hueName:"赤みの橙" },
+  { tone:"b", hue:6,  hex:"#F5D46E", hueName:"黄みの橙" },
+  { tone:"b", hue:8,  hex:"#EEED6B", hueName:"黄" },
+  { tone:"b", hue:10, hex:"#B3D880", hueName:"黄緑" },
+  { tone:"b", hue:12, hex:"#5EC28A", hueName:"緑" },
+  { tone:"b", hue:14, hex:"#4BB8A0", hueName:"青緑" },
+  { tone:"b", hue:16, hex:"#4AADCA", hueName:"緑みの青" },
+  { tone:"b", hue:18, hex:"#5A96D0", hueName:"青" },
+  { tone:"b", hue:20, hex:"#8E82C4", hueName:"青紫" },
+  { tone:"b", hue:22, hex:"#C27DB8", hueName:"紫" },
+  { tone:"b", hue:24, hex:"#E680A0", hueName:"赤紫" },
+
+  // ── strong（s）──
+  { tone:"s", hue:2,  hex:"#D03C3C", hueName:"赤" },
+  { tone:"s", hue:6,  hex:"#D4A622", hueName:"黄みの橙" },
+  { tone:"s", hue:8,  hex:"#C8C428", hueName:"黄" },
+  { tone:"s", hue:10, hex:"#72A83E", hueName:"黄緑" },
+  { tone:"s", hue:12, hex:"#0A8A55", hueName:"緑" },
+  { tone:"s", hue:16, hex:"#0072A0", hueName:"緑みの青" },
+  { tone:"s", hue:18, hex:"#1A5598", hueName:"青" },
+  { tone:"s", hue:20, hex:"#4A3580", hueName:"青紫" },
+  { tone:"s", hue:22, hex:"#882878", hueName:"紫" },
+  { tone:"s", hue:24, hex:"#B82860", hueName:"赤紫" },
+
+  // ── deep（dp）──
+  { tone:"dp", hue:2,  hex:"#96282F", hueName:"赤" },
+  { tone:"dp", hue:4,  hex:"#A04A1E", hueName:"赤みの橙" },
+  { tone:"dp", hue:6,  hex:"#A88018", hueName:"黄みの橙" },
+  { tone:"dp", hue:8,  hex:"#94901A", hueName:"黄" },
+  { tone:"dp", hue:10, hex:"#4D7828", hueName:"黄緑" },
+  { tone:"dp", hue:12, hex:"#006840", hueName:"緑" },
+  { tone:"dp", hue:16, hex:"#005880", hueName:"緑みの青" },
+  { tone:"dp", hue:18, hex:"#0A3E78", hueName:"青" },
+  { tone:"dp", hue:20, hex:"#352868", hueName:"青紫" },
+  { tone:"dp", hue:22, hex:"#681E62", hueName:"紫" },
+  { tone:"dp", hue:24, hex:"#8A1E48", hueName:"赤紫" },
+
+  // ── light（lt）──
+  { tone:"lt", hue:2,  hex:"#F5B3B8", hueName:"赤" },
+  { tone:"lt", hue:4,  hex:"#F5C2A0", hueName:"赤みの橙" },
+  { tone:"lt", hue:8,  hex:"#F2F0A0", hueName:"黄" },
+  { tone:"lt", hue:10, hex:"#C8E4A0", hueName:"黄緑" },
+  { tone:"lt", hue:12, hex:"#88D4A4", hueName:"緑" },
+  { tone:"lt", hue:16, hex:"#82C4D8", hueName:"緑みの青" },
+  { tone:"lt", hue:18, hex:"#8CB2E0", hueName:"青" },
+  { tone:"lt", hue:20, hex:"#AEA2D4", hueName:"青紫" },
+  { tone:"lt", hue:22, hex:"#D4A0CC", hueName:"紫" },
+  { tone:"lt", hue:24, hex:"#F0A2B8", hueName:"赤紫" },
+
+  // ── soft（sf）──
+  { tone:"sf", hue:2,  hex:"#C98A8E", hueName:"赤" },
+  { tone:"sf", hue:8,  hex:"#C4C27E", hueName:"黄" },
+  { tone:"sf", hue:12, hex:"#6AA882", hueName:"緑" },
+  { tone:"sf", hue:16, hex:"#6898AC", hueName:"緑みの青" },
+  { tone:"sf", hue:18, hex:"#7088B0", hueName:"青" },
+  { tone:"sf", hue:22, hex:"#A47EA0", hueName:"紫" },
+
+  // ── dull（d）──
+  { tone:"d", hue:2,  hex:"#A06064", hueName:"赤" },
+  { tone:"d", hue:8,  hex:"#9A9858", hueName:"黄" },
+  { tone:"d", hue:12, hex:"#488868", hueName:"緑" },
+  { tone:"d", hue:16, hex:"#487888", hueName:"緑みの青" },
+  { tone:"d", hue:18, hex:"#4E6888", hueName:"青" },
+  { tone:"d", hue:22, hex:"#805E7C", hueName:"紫" },
+
+  // ── dark（dk）──
+  { tone:"dk", hue:2,  hex:"#6E2B30", hueName:"赤" },
+  { tone:"dk", hue:6,  hex:"#785818", hueName:"黄みの橙" },
+  { tone:"dk", hue:8,  hex:"#686418", hueName:"黄" },
+  { tone:"dk", hue:12, hex:"#1A5E38", hueName:"緑" },
+  { tone:"dk", hue:16, hex:"#18485E", hueName:"緑みの青" },
+  { tone:"dk", hue:18, hex:"#1A3858", hueName:"青" },
+  { tone:"dk", hue:22, hex:"#501E4A", hueName:"紫" },
+
+  // ── pale（p）──
+  { tone:"p", hue:2,  hex:"#F8D1D4", hueName:"赤" },
+  { tone:"p", hue:8,  hex:"#F5F2C8", hueName:"黄" },
+  { tone:"p", hue:12, hex:"#B8E4C4", hueName:"緑" },
+  { tone:"p", hue:16, hex:"#B0D8E4", hueName:"緑みの青" },
+  { tone:"p", hue:18, hex:"#B8CEE8", hueName:"青" },
+  { tone:"p", hue:22, hex:"#E0C4DC", hueName:"紫" },
+  { tone:"p", hue:24, hex:"#F0C4D0", hueName:"赤紫" },
+
+  // ── light grayish（ltg）──
+  { tone:"ltg", hue:2,  hex:"#C4A0A3", hueName:"赤" },
+  { tone:"ltg", hue:8,  hex:"#BCBA94", hueName:"黄" },
+  { tone:"ltg", hue:12, hex:"#8CB098", hueName:"緑" },
+  { tone:"ltg", hue:18, hex:"#8A9CB4", hueName:"青" },
+  { tone:"ltg", hue:22, hex:"#B098AE", hueName:"紫" },
+
+  // ── grayish（g）──
+  { tone:"g", hue:2,  hex:"#8E6064", hueName:"赤" },
+  { tone:"g", hue:8,  hex:"#888462", hueName:"黄" },
+  { tone:"g", hue:12, hex:"#587868", hueName:"緑" },
+  { tone:"g", hue:18, hex:"#586878", hueName:"青" },
+  { tone:"g", hue:22, hex:"#7E5E78", hueName:"紫" },
+
+  // ── dark grayish（dkg）──
+  { tone:"dkg", hue:2,  hex:"#53363A", hueName:"赤" },
+  { tone:"dkg", hue:8,  hex:"#4E4C30", hueName:"黄" },
+  { tone:"dkg", hue:12, hex:"#2E4E3A", hueName:"緑" },
+  { tone:"dkg", hue:18, hex:"#2E3E50", hueName:"青" },
+  { tone:"dkg", hue:22, hex:"#483248", hueName:"紫" },
+];
+
+// トーン名の日本語対応表
+const toneNames = {
+  "v": "ビビッド",
+  "b": "ブライト",
+  "s": "ストロング",
+  "dp": "ディープ",
+  "lt": "ライト",
+  "sf": "ソフト",
+  "d": "ダル",
+  "dk": "ダーク",
+  "p": "ペール",
+  "ltg": "ライトグレイッシュ",
+  "g": "グレイッシュ",
+  "dkg": "ダークグレイッシュ",
+};
