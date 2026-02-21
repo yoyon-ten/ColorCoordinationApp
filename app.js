@@ -279,7 +279,6 @@ function renderTraining() {
     html += '<span class="choice-code">' + formatCode(c) + '</span>';
     html += '<span class="choice-sub">' + formatDescription(c) + '</span>';
     html += '</span>';
-    html += '<span class="choice-chip" style="background:' + c.hex + ';' + (isLightColor(c.hex) ? 'border-color:rgba(0,0,0,0.15)' : '') + '"></span>';
     html += '</button>';
   });
   document.getElementById('training-choices').innerHTML = html;
