@@ -158,6 +158,7 @@ body {
 .menu-icon.quiz { background: var(--accent-light); color: var(--accent); }
 .menu-icon.palette { background: #EDE9FE; color: #7C3AED; }
 .menu-icon.training { background: #DBEAFE; color: #2563EB; }
+.menu-icon.stats { background: #FEF3C7; color: #D97706; }
 
 .menu-text h3 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
 .menu-text p { font-size: 12px; color: var(--text-sub); }
@@ -560,3 +561,160 @@ body {
 
 .training-choice-btn.disabled { pointer-events: none; }
 .training-choice-btn.disabled:not(.correct):not(.wrong) { opacity: 0.45; }
+
+/* ===== Stats ===== */
+.stats-area { padding: 0 20px 40px; }
+
+.stats-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.stats-summary-item {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 14px 8px;
+  text-align: center;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.stats-summary-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.stats-summary-value.correct { color: var(--correct); }
+.stats-summary-value.wrong { color: var(--wrong); }
+
+.stats-summary-label {
+  font-size: 10px;
+  color: var(--text-sub);
+}
+
+.stats-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.stats-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stats-bar-item {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+}
+
+.stats-bar-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.stats-bar-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stats-bar-nums {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.stats-bar-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.stats-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  min-width: 2px;
+}
+
+.bar-danger { background: var(--wrong); }
+.bar-warn { background: #F59E0B; }
+.bar-ok { background: var(--correct); }
+
+.stats-combo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats-combo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border-radius: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+}
+
+.stats-combo-chip {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.stats-combo-code {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  min-width: 40px;
+}
+
+.stats-combo-name {
+  font-size: 12px;
+  color: var(--text-sub);
+  flex: 1;
+}
+
+.stats-combo-count {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--wrong);
+  flex-shrink: 0;
+}
+
+.stats-empty {
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 14px;
+  line-height: 1.8;
+  padding: 40px 20px;
+}
+
+.stats-clear-btn {
+  width: 100%;
+  margin-top: 32px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.stats-clear-btn:active { transform: scale(0.97); }

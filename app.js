@@ -294,6 +294,9 @@ function selectTraining(idx) {
   const q = trainingQuestions[trainingIdx];
   if (idx === q.answer) trainingScore++;
 
+  // Record stats
+  recordAttempt(q.color, idx === q.answer);
+
   // Show hint
   document.getElementById('training-hint').classList.add('show');
 
@@ -350,4 +353,163 @@ function showTrainingResult() {
   document.getElementById('training-result-message').textContent = title;
   document.getElementById('training-result-sub').textContent = '色感覚トレーニング ─ ' + sub;
   showScreen('trainingResult');
+}
+
+// ============================================================
+// STATISTICS (localStorage)
+// ============================================================
+const STATS_KEY = 'colorTrainingStats';
+
+function loadStats() {
+  try {
+    const raw = localStorage.getItem(STATS_KEY);
+    return raw ? JSON.parse(raw) : { attempts: [] };
+  } catch(e) {
+    return { attempts: [] };
+  }
+}
+
+function saveStats(stats) {
+  try {
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+  } catch(e) {}
+}
+
+function recordAttempt(color, isCorrect) {
+  const stats = loadStats();
+  stats.attempts.push({
+    tone: color.tone,
+    hue: color.hue,
+    correct: isCorrect,
+    date: new Date().toISOString()
+  });
+  saveStats(stats);
+}
+
+function clearStats() {
+  if (confirm('学習履歴をすべて削除しますか？')) {
+    localStorage.removeItem(STATS_KEY);
+    renderStats();
+  }
+}
+
+function showStats() {
+  showScreen('stats');
+  renderStats();
+}
+
+function renderStats() {
+  const stats = loadStats();
+  const attempts = stats.attempts;
+
+  // Total summary
+  const total = attempts.length;
+  const correct = attempts.filter(a => a.correct).length;
+  const wrong = total - correct;
+
+  document.getElementById('stats-total').textContent = total;
+  document.getElementById('stats-correct').textContent = correct;
+  document.getElementById('stats-wrong').textContent = wrong;
+  document.getElementById('stats-rate').textContent = total > 0 ? Math.round(correct / total * 100) + '%' : '—';
+
+  if (total === 0) {
+    document.getElementById('stats-detail').innerHTML = '<p class="stats-empty">まだ学習履歴がありません。<br>色感覚トレーニングを始めましょう！</p>';
+    return;
+  }
+
+  // Aggregate by tone
+  const toneOrder = ['v','b','s','dp','lt','sf','d','dk','p','ltg','g','dkg'];
+  const byTone = {};
+  toneOrder.forEach(t => byTone[t] = { total: 0, wrong: 0 });
+  attempts.forEach(a => {
+    if (byTone[a.tone]) {
+      byTone[a.tone].total++;
+      if (!a.correct) byTone[a.tone].wrong++;
+    }
+  });
+
+  // Aggregate by hue
+  const byHue = {};
+  for (let h = 1; h <= 24; h++) byHue[h] = { total: 0, wrong: 0 };
+  attempts.forEach(a => {
+    if (byHue[a.hue]) {
+      byHue[a.hue].total++;
+      if (!a.correct) byHue[a.hue].wrong++;
+    }
+  });
+
+  // Hue names
+  const hueNameMap = {};
+  pccsTrainingData.forEach(c => { hueNameMap[c.hue] = c.hueName; });
+
+  // Build HTML
+  let html = '';
+
+  // ── Tone section ──
+  html += '<h3 class="stats-section-title">トーン別の苦手度</h3>';
+  html += '<div class="stats-bar-list">';
+  const toneItems = toneOrder
+    .filter(t => byTone[t].total > 0)
+    .map(t => ({ key: t, label: t + '（' + toneNames[t] + '）', ...byTone[t] }))
+    .sort((a, b) => (b.wrong / b.total) - (a.wrong / a.total));
+
+  toneItems.forEach(item => {
+    const wrongRate = Math.round(item.wrong / item.total * 100);
+    const barClass = wrongRate >= 50 ? 'bar-danger' : wrongRate >= 25 ? 'bar-warn' : 'bar-ok';
+    html += '<div class="stats-bar-item">';
+    html += '<div class="stats-bar-label"><span class="stats-bar-name">' + item.label + '</span><span class="stats-bar-nums">' + item.wrong + '/' + item.total + '問ミス</span></div>';
+    html += '<div class="stats-bar-track"><div class="stats-bar-fill ' + barClass + '" style="width:' + wrongRate + '%"></div></div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // ── Hue section ──
+  html += '<h3 class="stats-section-title" style="margin-top:28px">色相別の苦手度</h3>';
+  html += '<div class="stats-bar-list">';
+  const hueItems = Object.keys(byHue)
+    .filter(h => byHue[h].total > 0)
+    .map(h => ({ key: h, label: h + '：' + (hueNameMap[h] || ''), ...byHue[h] }))
+    .sort((a, b) => (b.wrong / b.total) - (a.wrong / a.total));
+
+  hueItems.forEach(item => {
+    const wrongRate = Math.round(item.wrong / item.total * 100);
+    const barClass = wrongRate >= 50 ? 'bar-danger' : wrongRate >= 25 ? 'bar-warn' : 'bar-ok';
+    html += '<div class="stats-bar-item">';
+    html += '<div class="stats-bar-label"><span class="stats-bar-name">' + item.label + '</span><span class="stats-bar-nums">' + item.wrong + '/' + item.total + '問ミス</span></div>';
+    html += '<div class="stats-bar-track"><div class="stats-bar-fill ' + barClass + '" style="width:' + wrongRate + '%"></div></div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // ── Worst combos ──
+  const byCombo = {};
+  attempts.forEach(a => {
+    const key = a.tone + a.hue;
+    if (!byCombo[key]) byCombo[key] = { tone: a.tone, hue: a.hue, total: 0, wrong: 0 };
+    byCombo[key].total++;
+    if (!a.correct) byCombo[key].wrong++;
+  });
+
+  const worstCombos = Object.values(byCombo)
+    .filter(c => c.wrong > 0)
+    .sort((a, b) => b.wrong - a.wrong || (b.wrong/b.total) - (a.wrong/a.total))
+    .slice(0, 8);
+
+  if (worstCombos.length > 0) {
+    html += '<h3 class="stats-section-title" style="margin-top:28px">特に苦手な色（トーン×色相）</h3>';
+    html += '<div class="stats-combo-list">';
+    worstCombos.forEach(c => {
+      const color = pccsTrainingData.find(d => d.tone === c.tone && d.hue === c.hue);
+      const hexColor = color ? color.hex : '#888';
+      html += '<div class="stats-combo-item">';
+      html += '<span class="stats-combo-chip" style="background:' + hexColor + ';' + (isLightColor(hexColor) ? 'box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1)' : '') + '"></span>';
+      html += '<span class="stats-combo-code">' + c.tone + c.hue + '</span>';
+      html += '<span class="stats-combo-name">' + toneNames[c.tone] + '・' + (hueNameMap[c.hue] || '') + '</span>';
+      html += '<span class="stats-combo-count">' + c.wrong + '回ミス</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('stats-detail').innerHTML = html;
 }

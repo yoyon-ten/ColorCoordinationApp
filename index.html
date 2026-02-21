@@ -47,6 +47,13 @@
           <div class="menu-text"><h3>色感覚トレーニング</h3><p>色を見てトーン記号×色相番号を当てる</p></div>
           <div class="menu-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         </div>
+        <div class="menu-card" onclick="showStats()">
+          <div class="menu-icon stats">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+          </div>
+          <div class="menu-text"><h3>苦手分析</h3><p>トーン・色相ごとの正答率を確認</p></div>
+          <div class="menu-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </div>
       </div>
     </div>
 
@@ -152,12 +159,45 @@
         <h2 class="result-message" id="training-result-message"></h2>
         <p class="result-sub" id="training-result-sub"></p>
         <div class="result-actions">
-          <button class="result-btn" onclick="showScreen('home')">ホーム</button>
+          <button class="result-btn" onclick="showStats()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            苦手分析
+          </button>
           <button class="result-btn primary" onclick="startTraining()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             もう一度
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- ===== STATS ===== -->
+    <div id="screen-stats" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="showScreen('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <div class="header-title">苦手分析</div>
+      </div>
+      <div class="stats-area">
+        <div class="stats-summary">
+          <div class="stats-summary-item">
+            <span class="stats-summary-value" id="stats-total">0</span>
+            <span class="stats-summary-label">総回答数</span>
+          </div>
+          <div class="stats-summary-item">
+            <span class="stats-summary-value correct" id="stats-correct">0</span>
+            <span class="stats-summary-label">正解</span>
+          </div>
+          <div class="stats-summary-item">
+            <span class="stats-summary-value wrong" id="stats-wrong">0</span>
+            <span class="stats-summary-label">不正解</span>
+          </div>
+          <div class="stats-summary-item">
+            <span class="stats-summary-value" id="stats-rate">—</span>
+            <span class="stats-summary-label">正答率</span>
+          </div>
+        </div>
+        <div id="stats-detail"></div>
+        <button class="stats-clear-btn" onclick="clearStats()">学習履歴をリセット</button>
       </div>
     </div>
 
