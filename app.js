@@ -272,10 +272,7 @@ function renderTraining() {
   q.choices.forEach((c, i) => {
     html += '<button class="training-choice-btn" onclick="selectTraining(' + i + ')" id="tc-' + i + '">';
     html += '<span class="choice-label" id="tl-' + i + '">' + labels[i] + '</span>';
-    html += '<span class="choice-detail">';
     html += '<span class="choice-code">' + formatCode(c) + '</span>';
-    html += '<span class="choice-sub">' + formatDescription(c) + '</span>';
-    html += '</span>';
     html += '</button>';
   });
   document.getElementById('training-choices').innerHTML = html;
