@@ -1,4 +1,28 @@
 // ============================================================
+// DARK MODE
+// ============================================================
+(function initTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', '#1A1A1E');
+  }
+})();
+
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', '#F7F5F2');
+    localStorage.setItem('theme', 'light');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', '#1A1A1E');
+    localStorage.setItem('theme', 'dark');
+  }
+}
+
+// ============================================================
 // STATE
 // ============================================================
 let currentGrade = "";
