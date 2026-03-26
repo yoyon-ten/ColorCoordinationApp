@@ -122,7 +122,11 @@ function selectChoice(idx) {
   answered = true;
   selectedIdx = idx;
   const q = questions[currentIdx];
-  if (idx === q.answer) score++;
+  const isCorrect = idx === q.answer;
+  if (isCorrect) score++;
+
+  // Record attempt for stats
+  recordQuizAttempt(q, isCorrect);
 
   const labels = ['A', 'B', 'C', 'D'];
   for (let i = 0; i < q.choices.length; i++) {
@@ -520,11 +524,13 @@ function showKanyoResult() {
 // ============================================================
 const STATS_KEY_PCCS = 'colorTrainingStats';
 const STATS_KEY_KANYO = 'kanyoTrainingStats';
+const STATS_KEY_QUIZ = 'quizTrainingStats';
 const MAX_STATS_ATTEMPTS = 1000;
 let currentStatsTab = 'pccs';
 const statsSaveWarning = {
   [STATS_KEY_PCCS]: false,
-  [STATS_KEY_KANYO]: false
+  [STATS_KEY_KANYO]: false,
+  [STATS_KEY_QUIZ]: false
 };
 
 function loadStats(key) {
@@ -557,6 +563,15 @@ function recordAttempt(color, isCorrect) {
   saveStats(STATS_KEY_PCCS, stats);
 }
 
+function recordQuizAttempt(question, isCorrect) {
+  const stats = loadStats(STATS_KEY_QUIZ);
+  stats.attempts.push({ id: question.id, category: question.category, correct: isCorrect, date: new Date().toISOString() });
+  if (stats.attempts.length > MAX_STATS_ATTEMPTS) {
+    stats.attempts = stats.attempts.slice(-MAX_STATS_ATTEMPTS);
+  }
+  saveStats(STATS_KEY_QUIZ, stats);
+}
+
 function recordKanyoAttempt(color, isCorrect) {
   const stats = loadStats(STATS_KEY_KANYO);
   stats.attempts.push({ name: color.name, category: color.category, correct: isCorrect, date: new Date().toISOString() });
@@ -567,16 +582,16 @@ function recordKanyoAttempt(color, isCorrect) {
 }
 
 function updateStatsStorageNotice() {
-  const key = currentStatsTab === 'pccs' ? STATS_KEY_PCCS : STATS_KEY_KANYO;
+  const key = currentStatsTab === 'pccs' ? STATS_KEY_PCCS : currentStatsTab === 'kanyo' ? STATS_KEY_KANYO : STATS_KEY_QUIZ;
   const notice = document.getElementById('stats-storage-notice');
   if (!notice) return;
   notice.classList.toggle('show', !!statsSaveWarning[key]);
 }
 
 function clearCurrentStats() {
-  const label = currentStatsTab === 'pccs' ? '色感覚' : '慣用色名';
+  const label = currentStatsTab === 'pccs' ? '色感覚' : currentStatsTab === 'kanyo' ? '慣用色名' : '2級演習';
   if (confirm(label + 'の学習履歴をすべて削除しますか？')) {
-    const key = currentStatsTab === 'pccs' ? STATS_KEY_PCCS : STATS_KEY_KANYO;
+    const key = currentStatsTab === 'pccs' ? STATS_KEY_PCCS : currentStatsTab === 'kanyo' ? STATS_KEY_KANYO : STATS_KEY_QUIZ;
     localStorage.removeItem(key);
     renderStats();
   }
@@ -598,14 +613,17 @@ function switchStatsTab(tab) {
 function updateStatsTabUI() {
   document.getElementById('stats-tab-pccs').classList.toggle('active', currentStatsTab === 'pccs');
   document.getElementById('stats-tab-kanyo').classList.toggle('active', currentStatsTab === 'kanyo');
+  document.getElementById('stats-tab-quiz').classList.toggle('active', currentStatsTab === 'quiz');
 }
 
 function renderStats() {
   updateStatsStorageNotice();
   if (currentStatsTab === 'pccs') {
     renderPccsStats();
-  } else {
+  } else if (currentStatsTab === 'kanyo') {
     renderKanyoStats();
+  } else {
+    renderQuizStats();
   }
 }
 
@@ -726,6 +744,76 @@ function renderKanyoStats() {
       html += '<span class="stats-combo-code">' + c.name + '</span>';
       html += '<span class="stats-combo-name">' + c.category + '</span>';
       html += '<span class="stats-combo-count">' + c.wrong + '回ミス</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('stats-detail').innerHTML = html;
+}
+
+function renderQuizStats() {
+  const stats = loadStats(STATS_KEY_QUIZ);
+  const attempts = stats.attempts;
+  const total = attempts.length;
+  const correct = attempts.filter(a => a.correct).length;
+  const wrong = total - correct;
+
+  document.getElementById('stats-total').textContent = total;
+  document.getElementById('stats-correct').textContent = correct;
+  document.getElementById('stats-wrong').textContent = wrong;
+  document.getElementById('stats-rate').textContent = total > 0 ? Math.round(correct / total * 100) + '%' : '—';
+
+  if (total === 0) {
+    document.getElementById('stats-detail').innerHTML = '<p class="stats-empty">まだ学習履歴がありません。<br>2級の問題演習を始めましょう！</p>';
+    return;
+  }
+
+  // Gather all categories from quizData
+  const allCategories = [];
+  const catSet = new Set();
+  (quizData["2級"] || []).forEach(q => {
+    if (!catSet.has(q.category)) { catSet.add(q.category); allCategories.push(q.category); }
+  });
+
+  // By category
+  const byCat = {};
+  allCategories.forEach(c => byCat[c] = { total: 0, wrong: 0 });
+  attempts.forEach(a => {
+    if (!byCat[a.category]) byCat[a.category] = { total: 0, wrong: 0 };
+    byCat[a.category].total++;
+    if (!a.correct) byCat[a.category].wrong++;
+  });
+
+  let html = '';
+  html += '<h3 class="stats-section-title">カテゴリ別の苦手度</h3>';
+  html += renderBarList(allCategories.filter(c => byCat[c].total > 0).map(c => ({ label: c, ...byCat[c] })));
+
+  // Worst individual questions
+  const byQuestion = {};
+  attempts.forEach(a => {
+    const key = a.id;
+    if (!byQuestion[key]) byQuestion[key] = { id: a.id, category: a.category, total: 0, wrong: 0 };
+    byQuestion[key].total++;
+    if (!a.correct) byQuestion[key].wrong++;
+  });
+
+  const worstQuestions = Object.values(byQuestion).filter(q => q.wrong > 0)
+    .sort((a, b) => b.wrong - a.wrong || (b.wrong/b.total) - (a.wrong/a.total)).slice(0, 10);
+
+  if (worstQuestions.length > 0) {
+    const questionMap = {};
+    (quizData["2級"] || []).forEach(q => { questionMap[q.id] = q.question; });
+
+    html += '<h3 class="stats-section-title" style="margin-top:28px">特に苦手な問題</h3>';
+    html += '<div class="stats-combo-list">';
+    worstQuestions.forEach(q => {
+      const questionText = questionMap[q.id] || '問題ID:' + q.id;
+      const shortText = questionText.length > 30 ? questionText.substring(0, 30) + '…' : questionText;
+      html += '<div class="stats-combo-item">';
+      html += '<span class="stats-combo-chip" style="background:var(--accent);font-size:10px;color:#fff;display:flex;align-items:center;justify-content:center;">Q</span>';
+      html += '<span class="stats-combo-code" style="flex:1;font-size:13px;" title="' + questionText.replace(/"/g, '&quot;') + '">' + shortText + '</span>';
+      html += '<span class="stats-combo-count">' + q.wrong + '回ミス</span>';
       html += '</div>';
     });
     html += '</div>';
